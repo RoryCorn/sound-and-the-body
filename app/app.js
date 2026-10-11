@@ -9,6 +9,9 @@
   const el = id => document.getElementById(id);
   const canvasInner = el("canvasInner");
   const hint = el("hint");
+  // The caption the markup ships with. Clearing a selection has to put this
+  // back, or the caption goes on naming a region the panel has just dropped.
+  const HINT_DEFAULT = "Tap or hover a highlighted region to explore it.";
   const panelEmpty = el("panelEmpty");
   const panelContent = el("panelContent");
 
@@ -539,6 +542,7 @@
       if(!b || b.dataset.dim===state.dim) return;
       state.dim=b.dataset.dim; saveDim();
       state.region=null;
+      hint.textContent=HINT_DEFAULT;
       Audio.stop();
       panelEmpty.hidden=false; panelContent.hidden=true;
       haptic("light");
@@ -549,6 +553,8 @@
   function setView(v){
     state.view=v;
     state.region=null;
+    // before renderCurrent(), so a view with its own caption (brainwaves) wins
+    hint.textContent=HINT_DEFAULT;
     haptic("light");
     document.querySelectorAll(".tab").forEach(t=>{ const on=t.dataset.view===v; t.classList.toggle("active",on); t.setAttribute("aria-selected",on); });
     Audio.stop();
