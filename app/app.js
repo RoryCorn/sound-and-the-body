@@ -703,7 +703,23 @@
       showPaywall();
     }
   }
-  function showPaywall(){ el("pwBuyLabel").textContent="Unlock — "+(CFG.priceLabel||"$1.99"); el("pwNote").textContent=""; show("paywall"); }
+  function showPaywall(){
+    el("pwBuyLabel").textContent="Unlock — "+(CFG.priceLabel||"$1.99");
+    el("pwNote").textContent="";
+    // The trial pill opens this sheet mid-trial, so the lead must not tell
+    // someone with days still on the clock that their trial has ended.
+    const lead = el("pwLead");
+    if(lead){
+      const tail = " Unlock every map and tone — a one-time purchase, no subscription.";
+      if(Entitlement.msLeft() > 0){
+        const d = Entitlement.daysLeft();
+        lead.textContent = (d<=1 ? "Your free trial ends today." : "You have "+d+" days left in your free trial.") + tail;
+      } else {
+        lead.textContent = "Your free trial has ended." + tail;
+      }
+    }
+    show("paywall");
+  }
   function purchaseMsg(r){ return { unconfigured:"In-app purchases aren't set up in this build yet — see MONETIZATION.md.", unavailable:"This item isn't available right now.", cancelled:"Purchase cancelled.", none:"No previous purchase found for this account.", incomplete:"Purchase didn't complete.", error:"Something went wrong. Please try again." }[r] || "Please try again."; }
   el("trialPill").addEventListener("click", ()=>{ if(!Entitlement.isUnlocked()){ haptic("light"); showPaywall(); } });
   el("paywall").addEventListener("click", e=>{ if(e.target===el("paywall") && Entitlement.hasAccess()) hide("paywall"); });
