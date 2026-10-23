@@ -786,6 +786,7 @@
     const q = new URLSearchParams(location.search);
     const sid = q.get("session_id");
     if(!sid) return;
+    let retry = false;
     try{
       const d = await window.SATB_WEB_STORE.confirm(sid);
       if(d && d.ok){
@@ -793,10 +794,20 @@
         hide("paywall"); updateAccess();
         if(d.code) showPurchaseCode(d.code, d.emailed);
       }
-    }catch(e){ /* leave them on the trial rather than guess */ }
+    }catch(e){
+      // The confirm itself failed (a network blip, or the server could not
+      // finish). They may well have paid, and the session id in the address
+      // bar is the only way to finish - throwing it away used to leave a
+      // paying buyer on the trial with nothing to retry. Keep it and say so.
+      retry = true;
+      show("paywall");
+      el("pwNote").textContent = /payment went through/i.test(e.message || "")
+        ? e.message
+        : "We could not confirm your purchase just now. Reload this page in a minute - if you paid, the unlock will finish then.";
+    }
     finally{
       // Keep the receipt out of the address bar so a refresh is harmless.
-      try{ history.replaceState({}, "", location.pathname); }catch(e){}
+      if(!retry){ try{ history.replaceState({}, "", location.pathname); }catch(e){} }
     }
   })();
 
